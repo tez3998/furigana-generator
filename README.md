@@ -1,7 +1,7 @@
 # Furigana Generator
 A CLI tool which generates furigana
 
-# Demo
+# Demo (YouTube)
 [![Demo of this CLI tool](https://img.youtube.com/vi/-DgJs0IDyPU/0.jpg)](https://www.youtube.com/watch?v=-DgJs0IDyPU)
 
 # Installation
