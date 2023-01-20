@@ -1,10 +1,15 @@
 import jaconv
+import os
+import pathlib
 import regex
 from janome.tokenizer import Tokenizer, Token
 
 class FuriganaGenerator:
     def __init__(self) -> None:
-        self.__tokenizer: Tokenizer = Tokenizer()
+        user_dic_path = os.path.abspath(path="./files/user_dictionary.csv")
+        self.__tokenizer: Tokenizer = Tokenizer(udic=user_dic_path,
+                                                udic_type="simpledic",
+                                                udic_enc="utf8")
         self.__open_tag: str = "{"
         self.__close_tag: str = "}"
 
