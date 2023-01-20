@@ -1,0 +1,1 @@
+This directory holds files other than source code like `user_dictionary.csv`.
