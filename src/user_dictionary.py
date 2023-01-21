@@ -5,8 +5,8 @@ import sys
 
 class UserDictionary:
     def __init__(self) -> None:
-        self.__USER_DIC_PATH: str = r"./files/user_dictionary.csv"
-        self.__PART_OF_SPEECH_PATH: str = r"./files/part_of_speech.txt"
+        self.__USER_DIC_PATH: str = r"../files/user_dictionary.csv"
+        self.__PART_OF_SPEECH_PATH: str = r"../files/part_of_speech.txt"
         self.__part_of_speech_list: list[str] = []
 
         user_dic: pathlib.Path = pathlib.Path(self.__USER_DIC_PATH)
