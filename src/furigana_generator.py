@@ -25,8 +25,6 @@ class FuriganaGenerator:
             surface: str = token.surface
 
             if self.__include_kanji(text=surface):
-                # furigana: str = jaconv.kata2hira(token.reading)
-                # text_with_furigana += f"{surface}{self.__open_tag}{furigana}{self.__close_tag}"
                 text_with_furigana += self.__attach_furigana(token=token)
             else:
                 text_with_furigana += surface
