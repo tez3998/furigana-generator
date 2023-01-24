@@ -43,7 +43,7 @@ class FuriganaGenerator:
             return True
     
 
-    def __is_hiragana(self, char) -> bool:
+    def __is_hiragana(self, char: str) -> bool:
         pattern = regex.compile(r"\p{Script=Hiragana}")
         
         if pattern.fullmatch(string=char) == None:
@@ -53,79 +53,61 @@ class FuriganaGenerator:
     
 
     def __attach_furigana(self, token: Token) -> str:
-        stack: list[str] = []
-        surface: str = token.surface
-        reading: str = token.reading
         text_with_furigana: str = ""
-        chunks: list[str] = self.__separete_kanji_from_other_char_types(text=surface)
-        stack: list[str] = []
-
-        reversed_chunks: list[str] = list(reversed(chunks))
-        reading_index: int = len(reading) - 1
-        for ci, chunk in enumerate(reversed_chunks):
-            if self.__include_kanji(text=chunk):
-                kanji: str = chunk
-
-                if ci == len(reversed_chunks) - 1:
-                    furigana: str = jaconv.kata2hira(reading[0: reading_index + 1])
-                    stack.append(kanji + self.__open_tag + furigana + self.__close_tag)
-                else:
-                    next_chunk: str = reversed_chunks[ci + 1]
-                    next_char: str = next_chunk[len(next_chunk) - 1]
-                    old_reading_index: str = reading_index
-
-                    while True:
-                        char: str
-                        if self.__is_hiragana(char=next_char):
-                            char = jaconv.kata2hira(text=reading[reading_index])
-                        else:
-                            char = reading[reading_index]
-
-                        if char == next_char:
-                            furigana: str = jaconv.kata2hira(reading[reading_index + 1: old_reading_index + 1])
-                            stack.append(kanji + self.__open_tag + furigana + self.__close_tag)
-                            break
-                        else:
-                            reading_index -= 1
-            else:
-                no_kanji: str = chunk
-
-                stack.append(no_kanji)
-                reading_index -= len(no_kanji)
-
-        for item in reversed(stack):
-            text_with_furigana += item
-
-        return text_with_furigana
-    
-
-    def __separete_kanji_from_other_char_types(self, text: str) -> list[str]:
-        chunks: list[str] = []
+        surface: str = token.surface
+        si: int = 0 # index of surface
+        reading: str = token.reading
+        ri: int = 0 # index of reading
+        char: str = ""
+        chunk: str = ""
+        chunk_reading: str = ""
         prev_char_was_kanji: bool
-        chunk: str
 
-        if self.__include_kanji(text=text[0]):
+        char = surface[si]
+        if self.__include_kanji(text=char):
             prev_char_was_kanji = True
+            chunk_reading = jaconv.kata2hira(text=reading[ri])
         else:
             prev_char_was_kanji = False
-        chunk = text[0]
+        chunk = char
+        si += 1
+        ri += 1
 
-        if len(text) == 1:
-            chunks.append(chunk)
-            return chunks
-        else:
-            for char in text[1:]:
-                include_kanji: bool = self.__include_kanji(text=char)
-
-                if prev_char_was_kanji and (not include_kanji):
-                    chunks.append(chunk)
-                    chunk = char
-                    prev_char_was_kanji = False
-                elif (not prev_char_was_kanji) and include_kanji:
-                    chunks.append(chunk)
+        while (ri < len(reading)) and (si < len(surface)):
+            char = surface[si]
+            if self.__include_kanji(text=char):
+                if prev_char_was_kanji: # in the middle of kanji chunk
+                    chunk += char
+                else: # at the start of kanji chunk
+                    text_with_furigana += chunk
                     chunk = char
                     prev_char_was_kanji = True
-                else:
+            else:
+                if prev_char_was_kanji: # at the start of no kanji chunk
+                    old_ri: int = ri
+                    while (ri < len(reading)) and (si < len(surface)):
+                        r: str = reading[ri]
+                        if self.__is_hiragana(char=char):
+                            r = jaconv.kata2hira(text=r)
+
+                        if (char == r) and (len(chunk_reading) + ri - old_ri > 0): # kanji must have one or more reading characters.
+                            chunk_reading += jaconv.kata2hira(text=reading[old_ri: ri])
+                            break
+                        else:
+                            ri += 1
+                    text_with_furigana += f"{chunk}{self.__open_tag}{chunk_reading}{self.__close_tag}"
+                    chunk = char
+                    chunk_reading = ""
+                    prev_char_was_kanji = False
+                else: # in the middle of no kanji chunk
                     chunk += char
-            chunks.append(chunk)
-            return chunks
+                ri += 1
+            si += 1
+
+        if prev_char_was_kanji:
+            chunk_reading += jaconv.kata2hira(text=reading[ri: len(reading)])
+            text_with_furigana += f"{chunk}{self.__open_tag}{chunk_reading}{self.__close_tag}"
+        else:
+            text_with_furigana += chunk
+
+        return text_with_furigana
